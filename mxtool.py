@@ -83,8 +83,8 @@ class MxTool:
 
     async def run_tool(self):
         if self.access_token:
-            self.client.access_token = self.access_token
             self.client = AsyncClient(self.matrix_server, self.matrix_user)
+            self.client.access_token = self.access_token
 
         while not self.access_token:
             answers = prompt(login_questions)
@@ -160,13 +160,14 @@ class MxTool:
             "op_nick": opnick,
             "user_id": self.matrix_user
         }
+        headers = {'content-type': 'application/json'}
         print('POST', json.dumps(post_data))
-        res = requests.post(url, data = json.dumps(post_data))
+        res = requests.post(url, data = json.dumps(post_data), headers = headers)
         if res.status_code != 200:
             print('Plumbing failed:', res.text)
         else:
-            print('Plumbing succeeded, IRC user', opnick, 'must now reply to the bot')
-        input("Press Enter to continue...")
+            print('Almost finished! IRC user', opnick, 'must now reply to the bot to finish plumbing.')
+        input("Press Enter")
 
     async def leave_rooms(self):
         leave_questions[0]['choices'] = []
