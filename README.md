@@ -7,6 +7,7 @@ Simple tools to do stuff with Matrix. WIP.
 A command line python tool that currently can:
 
 * Plumb IRCNet rooms
+* Leave rooms (faster than using Riot ui)
 
 ```bash
 pipenv shell
