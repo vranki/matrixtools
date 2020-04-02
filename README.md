@@ -12,5 +12,9 @@ A command line python tool that currently can:
 ```bash
 pipenv shell
 pipenv install
+python3 mxtool.py
+
+(or to use access token):
+
 MATRIX_USER="@user:matrix.org" MATRIX_ACCESS_TOKEN="longaccesstoken" MATRIX_SERVER="https://matrix.org" python3 mxtool.py
 ```

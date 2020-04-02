@@ -5,7 +5,7 @@ import asyncio
 import json
 import os
 import requests
-from nio import AsyncClient, InviteEvent, JoinError, RoomMessageText, MatrixRoom, LoginError, RoomMemberEvent, RoomVisibility, RoomPreset, RoomCreateError, RoomInviteResponse, RoomLeaveResponse
+from nio import AsyncClient, InviteEvent, JoinError, RoomMessageText, MatrixRoom, LoginError, LoginResponse, RoomMemberEvent, RoomVisibility, RoomPreset, RoomCreateError, RoomInviteResponse, RoomLeaveResponse
 from PyInquirer import prompt
 from pprint import pprint
 
@@ -13,6 +13,24 @@ matrix_user = os.getenv('MATRIX_USER')
 matrix_server = os.getenv('MATRIX_SERVER')
 access_token = os.getenv('MATRIX_ACCESS_TOKEN')
 
+
+login_questions = [
+    {
+        'type': 'input',
+        'name': 'user',
+        'message': 'Matrix user (example: @user:matrix.org)'
+    },
+    {
+        'type': 'input',
+        'name': 'server',
+        'message': 'Matrix homeserver (example: https://matrix.org)'
+    },
+    {
+        'type': 'input',
+        'name': 'password',
+        'message': 'Password'
+    },
+]
 
 tool_select = [
     {
@@ -61,14 +79,27 @@ class MxTool:
         self.matrix_server = server
         self.matrix_user = user
         self.access_token = token
-        self.client = AsyncClient(self.matrix_server, self.matrix_user)
-        self.client.access_token = self.access_token
         self.quit = False
 
     async def run_tool(self):
+        if self.access_token:
+            self.client.access_token = self.access_token
+            self.client = AsyncClient(self.matrix_server, self.matrix_user)
+
+        while not self.access_token:
+            answers = prompt(login_questions)
+            self.matrix_server = answers['server']
+            self.matrix_user = answers['user']
+            self.client = AsyncClient(self.matrix_server, self.matrix_user)
+            res = await self.client.login(answers['password'])
+            if type(res) == LoginResponse:
+                self.access_token = self.client.access_token
+            else:
+                print(res)
+
         while not self.quit:
             await self.client.sync()
-            print('Welcome, ', self.matrix_user, '\n\n')
+            print('\nWelcome, ', self.matrix_user, '\n\n')
             answers = prompt(tool_select)
             if(answers['tool']=='quit'):
                 self.quit = True
@@ -151,6 +182,5 @@ class MxTool:
             if type(rlr) != RoomLeaveResponse:
                 print(rlr)
 
-if matrix_server and matrix_user and access_token:
-    mxtool = MxTool(matrix_server, matrix_user, access_token)
-    asyncio.run(mxtool.run_tool())
+mxtool = MxTool(matrix_server, matrix_user, access_token)
+asyncio.run(mxtool.run_tool())
